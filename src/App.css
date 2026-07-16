@@ -552,6 +552,7 @@ body {
 .story-footer {
   display: flex;
   justify-content: flex-end;
+  gap: 12px;
   margin-top: 24px;
 }
 
@@ -1107,6 +1108,77 @@ body {
 .ai-review-error {
   font-size: 13px;
   color: var(--text-secondary);
+}
+
+.ai-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-light);
+}
+.ai-chat-log {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.ai-chat-bubble {
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 9px 12px;
+  border-radius: var(--radius-md);
+  white-space: pre-wrap;
+  max-width: 88%;
+}
+.ai-chat-bubble.user {
+  align-self: flex-end;
+  background-color: var(--accent-purple);
+  color: #ffffff;
+  border-bottom-right-radius: 2px;
+}
+.ai-chat-bubble.model {
+  align-self: flex-start;
+  background-color: var(--bg-workspace);
+  color: var(--text-secondary);
+  border-bottom-left-radius: 2px;
+}
+.ai-chat-bubble.typing {
+  opacity: 0.7;
+  font-style: italic;
+}
+.ai-chat-input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.ai-chat-input {
+  flex: 1;
+  min-width: 0;
+  resize: none;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text-primary);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  transition: var(--transition-smooth);
+}
+.ai-chat-input:focus {
+  outline: none;
+  border-color: var(--accent-purple);
+}
+.ai-chat-input::placeholder {
+  color: var(--text-muted);
+}
+.ai-chat-send {
+  padding: 9px 14px;
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 .ai-recommendations {
@@ -1887,56 +1959,8 @@ body {
   background-color: var(--text-primary);
 }
 
-/* story-mode 세그먼트 탭 (규칙이 없어 네이티브로 보이던 것) */
-.story-mode-tab {
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-muted);
-  transition: var(--transition-smooth);
-}
-.story-mode-tab.active {
-  background: var(--bg-card);
-  color: var(--text-primary);
-  box-shadow: var(--shadow-sm);
-}
-
-/* 사이드바 체크리스트 카드는 세로 꽉 차게 */
+/* 사이드바 체크리스트 카드가 <button>이 되며 폭이 줄어드는 것 보정 */
 .rec-card {
   width: 100%;
   text-align: left;
-}
-
-/* 문단별 AI 다듬기 */
-.section-refine-btn {
-  margin-top: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--accent-purple);
-  background: var(--accent-purple-light);
-  padding: 4px 10px;
-  border-radius: 8px;
-  opacity: 0.85;
-  transition: var(--transition-smooth);
-}
-.section-refine-btn:hover {
-  opacity: 1;
-}
-.section-refine-btn:disabled {
-  opacity: 0.5;
-}
-.section-override-footer {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 6px;
-  font-size: 11px;
-  color: var(--text-muted);
-}
-.section-revert-btn {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--accent-purple);
-  text-decoration: underline;
 }
