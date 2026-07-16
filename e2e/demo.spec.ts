@@ -4,7 +4,7 @@ test.describe("Law Document Generator Full HD Demo (A to Z Hackathon Presentatio
   test("Record complete A to Z flow with high quality and description subtitles", async ({
     page,
   }) => {
-    // 1. 브라우저가 열리면 자막용 오버레이와 클릭 이펙트 스타일을 전역으로 주입합니다.
+    // 1. 브라우저가 열리면 자막용 오버레이, 전역 커서 스타일, 클릭 이펙트를 주입합니다.
     await page.goto("/");
     await page.evaluate(() => {
       // (1) 데모 자막(자막 오버레이) 추가
@@ -15,15 +15,15 @@ test.describe("Law Document Generator Full HD Demo (A to Z Hackathon Presentatio
         bottom: "40px",
         left: "50%",
         transform: "translateX(-50%)",
-        background: "rgba(15, 23, 42, 0.92)",
+        background: "rgba(15, 23, 42, 0.94)",
         color: "#f8fafc",
-        padding: "16px 36px",
+        padding: "18px 40px",
         borderRadius: "9999px",
         fontSize: "22px",
         fontWeight: "700",
         fontFamily: "'Pretendard', 'Inter', sans-serif",
-        boxShadow: "0 15px 35px rgba(0, 0, 0, 0.35)",
-        border: "1.5px solid rgba(255, 255, 255, 0.15)",
+        boxShadow: "0 20px 40px rgba(0, 0, 0, 0.4)",
+        border: "1.5px solid rgba(255, 255, 255, 0.18)",
         zIndex: "100000",
         textAlign: "center",
         pointerEvents: "none",
@@ -33,29 +33,57 @@ test.describe("Law Document Generator Full HD Demo (A to Z Hackathon Presentatio
       });
       document.body.appendChild(caption);
 
-      // (2) 클릭 리플 이펙트 관련 CSS 추가
+      // (2) 가상 커서 요소 주입 (앰버색 마우스 포인터)
+      const cursor = document.createElement("div");
+      cursor.id = "custom-demo-cursor";
+      Object.assign(cursor.style, {
+        position: "fixed",
+        width: "28px",
+        height: "28px",
+        background: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b' stroke='white' stroke-width='1.5'%3E%3Cpath d='M4.5 3V19.5L9.8 14.7L14.7 21L17.5 19.3L12.7 13.2L18.5 13.2L4.5 3Z'/%3E%3C/svg%3E") no-repeat`,
+        pointerEvents: "none",
+        zIndex: "999999",
+        transition: "all 0.8s cubic-bezier(0.16, 1, 0.3, 1)", // 매끄러운 이징 곡선
+        left: "100px",
+        top: "200px",
+      });
+      document.body.appendChild(cursor);
+
+      // (3) 클릭 리플 이펙트 및 가상 커서의 클릭 흔들림 모션 주입
       const style = document.createElement("style");
       style.textContent = `
         .click-ripple {
           position: fixed;
-          width: 40px;
-          height: 40px;
-          background: rgba(245, 158, 11, 0.3); /* 골드 엘로 */
-          border: 4px solid rgba(245, 158, 11, 0.9);
+          width: 44px;
+          height: 44px;
+          background: rgba(245, 158, 11, 0.35);
+          border: 4px solid rgba(245, 158, 11, 0.95);
           border-radius: 50%;
           pointer-events: none;
           transform: translate(-50%, -50%) scale(0.3);
-          animation: ripple-anim 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+          animation: ripple-anim 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
           z-index: 100001;
         }
         @keyframes ripple-anim {
           0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
           100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
         }
+        #custom-demo-cursor.clicking {
+          transform: scale(0.85); /* 클릭할 때 살짝 눌리는 입체적 효과 */
+        }
       `;
       document.head.appendChild(style);
 
-      // (3) 클릭 리플 이펙트 스크립트 리스너 등록
+      // (4) 클릭 발생 시 가상 커서 모션 및 리플 트리거
+      window.addEventListener("mousedown", () => {
+        const c = document.getElementById("custom-demo-cursor");
+        if (c) c.classList.add("clicking");
+      });
+      window.addEventListener("mouseup", () => {
+        const c = document.getElementById("custom-demo-cursor");
+        if (c) c.classList.remove("clicking");
+      });
+
       window.addEventListener("click", (e) => {
         const ripple = document.createElement("div");
         ripple.className = "click-ripple";
@@ -74,6 +102,64 @@ test.describe("Law Document Generator Full HD Demo (A to Z Hackathon Presentatio
       }, msg);
     };
 
+    // 마우스를 부드럽게 글라이딩시키고 클릭하는 헬퍼 함수
+    const glideAndClick = async (locator: any, selector: string, hasText = "") => {
+      await page.evaluate(
+        ({ sel, txt }) => {
+          let el;
+          if (txt) {
+            const elements = Array.from(document.querySelectorAll(sel));
+            el = elements.find((e) => e.textContent?.includes(txt));
+          } else {
+            el = document.querySelector(sel);
+          }
+          if (el) {
+            const rect = el.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+            const cursor = document.getElementById("custom-demo-cursor");
+            if (cursor) {
+              cursor.style.left = `${x}px`;
+              cursor.style.top = `${y}px`;
+            }
+          }
+        },
+        { sel: selector, txt: hasText },
+      );
+
+      await page.waitForTimeout(900); // 부드러운 이동 애니메이션 대기
+      await locator.click();
+    };
+
+    // 마우스를 부드럽게 글라이딩시키고 호버만 수행하는 헬퍼 함수
+    const glideAndHover = async (locator: any, selector: string, hasText = "") => {
+      await page.evaluate(
+        ({ sel, txt }) => {
+          let el;
+          if (txt) {
+            const elements = Array.from(document.querySelectorAll(sel));
+            el = elements.find((e) => e.textContent?.includes(txt));
+          } else {
+            el = document.querySelector(sel);
+          }
+          if (el) {
+            const rect = el.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+            const cursor = document.getElementById("custom-demo-cursor");
+            if (cursor) {
+              cursor.style.left = `${x}px`;
+              cursor.style.top = `${y}px`;
+            }
+          }
+        },
+        { sel: selector, txt: hasText },
+      );
+
+      await page.waitForTimeout(900);
+      await locator.hover();
+    };
+
     // ==========================================
     // STEP 1: 서비스 소개 및 보증금 반환 시나리오 선택
     // ==========================================
@@ -87,9 +173,9 @@ test.describe("Law Document Generator Full HD Demo (A to Z Hackathon Presentatio
     );
     const card = page.locator(".situation-card").filter({ hasText: "전세/월세 보증금 미반환" });
     await expect(card).toBeVisible();
-    await card.hover();
-    await page.waitForTimeout(1500);
-    await card.click();
+    await glideAndHover(card, ".situation-card", "전세/월세 보증금 미반환");
+    await page.waitForTimeout(800);
+    await glideAndClick(card, ".situation-card", "전세/월세 보증금 미반환");
 
     // ==========================================
     // STEP 2: 일상 어조 사연 접수 및 분석 시작
@@ -105,9 +191,9 @@ test.describe("Law Document Generator Full HD Demo (A to Z Hackathon Presentatio
     );
     const micBtn = page.locator(".mic-button");
     await expect(micBtn).toBeVisible();
-    await micBtn.hover();
-    await page.waitForTimeout(1000);
-    await micBtn.click();
+    await glideAndHover(micBtn, ".mic-button");
+    await page.waitForTimeout(600);
+    await glideAndClick(micBtn, ".mic-button");
     await page.waitForTimeout(3000); // 텍스트 입력 후 감상 대기
 
     await updateCaption(
@@ -115,8 +201,9 @@ test.describe("Law Document Generator Full HD Demo (A to Z Hackathon Presentatio
     );
     const submitBtn = page.locator("button:has-text('문서 생성 시작')");
     await submitBtn.hover();
-    await page.waitForTimeout(1000);
-    await submitBtn.click();
+    await glideAndHover(submitBtn, "button", "문서 생성 시작");
+    await page.waitForTimeout(600);
+    await glideAndClick(submitBtn, "button", "문서 생성 시작");
 
     // ==========================================
     // STEP 3: Gemini 3.5 기반 개체 추출 시뮬레이션
@@ -143,9 +230,9 @@ test.describe("Law Document Generator Full HD Demo (A to Z Hackathon Presentatio
     );
     const firmToneTab = page.locator(".tone-tab:has-text('강력하게')");
     await expect(firmToneTab).toBeVisible();
-    await firmToneTab.hover();
-    await page.waitForTimeout(1000);
-    await firmToneTab.click();
+    await glideAndHover(firmToneTab, ".tone-tab", "강력하게");
+    await page.waitForTimeout(600);
+    await glideAndClick(firmToneTab, ".tone-tab", "강력하게");
     await page.waitForTimeout(3000); // 문서가 더 엄격한 법조체로 바뀐 모습 대기
 
     // 4-2. 상황 설정 변경 (Branch chips)
@@ -154,9 +241,9 @@ test.describe("Law Document Generator Full HD Demo (A to Z Hackathon Presentatio
     );
     const branchChip = page.locator(".branch-chip:has-text('묵시적 갱신 상태')");
     if (await branchChip.isVisible()) {
-      await branchChip.hover();
-      await page.waitForTimeout(1000);
-      await branchChip.click();
+      await glideAndHover(branchChip, ".branch-chip", "묵시적 갱신 상태");
+      await page.waitForTimeout(600);
+      await glideAndClick(branchChip, ".branch-chip", "묵시적 갱신 상태");
       await page.waitForTimeout(3000); // 상황에 따라 법령 및 템플릿이 변화한 모습
     }
 
@@ -166,18 +253,18 @@ test.describe("Law Document Generator Full HD Demo (A to Z Hackathon Presentatio
     );
     const emptySlot = page.locator(".interactive-slot.empty").first();
     await expect(emptySlot).toBeVisible();
-    await emptySlot.hover();
-    await page.waitForTimeout(1000);
-    await emptySlot.click();
+    await glideAndHover(emptySlot, ".interactive-slot.empty");
+    await page.waitForTimeout(600);
+    await glideAndClick(emptySlot, ".interactive-slot.empty");
 
     await updateCaption(
       "📋 <strong>추천 선택지 입력</strong>: AI가 가이드라인에 부합하는 추천 칩을 제안해 클릭 한 번으로 작성합니다.",
     );
     const choiceChip = page.locator(".choice-chip").first();
     await expect(choiceChip).toBeVisible();
-    await choiceChip.hover();
-    await page.waitForTimeout(1000);
-    await choiceChip.click(); // 칩을 클릭하여 저장하고 모달 닫기
+    await glideAndHover(choiceChip, ".choice-chip");
+    await page.waitForTimeout(600);
+    await glideAndClick(choiceChip, ".choice-chip"); // 칩을 클릭하여 저장하고 모달 닫기
     await page.waitForTimeout(3000);
 
     // 4-4. 실시간 국가법령정보 법리 검증 (Law click)
@@ -186,9 +273,9 @@ test.describe("Law Document Generator Full HD Demo (A to Z Hackathon Presentatio
     );
     const lawCitation = page.locator(".interactive-citation").first();
     await expect(lawCitation).toBeVisible();
-    await lawCitation.hover();
-    await page.waitForTimeout(1200);
-    await lawCitation.click(); // 법률 원문 팝업 띄우기
+    await glideAndHover(lawCitation, ".interactive-citation");
+    await page.waitForTimeout(600);
+    await glideAndClick(lawCitation, ".interactive-citation"); // 법률 원문 팝업 띄우기
 
     await updateCaption(
       "⚖️ <strong>국가법령 연동</strong>: 소송과 분쟁에서 완벽한 효력을 발휘할 수 있도록 실시간으로 실제 근거 조항을 확인해 줍니다.",
@@ -196,7 +283,9 @@ test.describe("Law Document Generator Full HD Demo (A to Z Hackathon Presentatio
     await page.waitForTimeout(4000); // 법령 모달 확인
     const closeLawBtn = page.locator(".modal-close");
     await expect(closeLawBtn).toBeVisible();
-    await closeLawBtn.click(); // 모달 닫기
+    await glideAndHover(closeLawBtn, ".modal-close");
+    await page.waitForTimeout(600);
+    await glideAndClick(closeLawBtn, ".modal-close"); // 모달 닫기
     await page.waitForTimeout(1500);
 
     // ==========================================
@@ -207,9 +296,9 @@ test.describe("Law Document Generator Full HD Demo (A to Z Hackathon Presentatio
     );
     const proceedBtn = page.locator(".sidebar-proceed");
     await expect(proceedBtn).toBeVisible();
-    await proceedBtn.hover();
-    await page.waitForTimeout(1200);
-    await proceedBtn.click();
+    await glideAndHover(proceedBtn, ".sidebar-proceed");
+    await page.waitForTimeout(600);
+    await glideAndClick(proceedBtn, ".sidebar-proceed");
 
     await expect(page.locator(".exporter-workspace")).toBeVisible();
     await updateCaption(

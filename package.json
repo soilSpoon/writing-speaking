@@ -10,7 +10,8 @@
     "test": "vp test",
     "check": "vp check",
     "preview": "vp preview",
-    "record-demo": "npx playwright test -c playwright.demo.config.ts"
+    "record-demo": "npx playwright test -c playwright.demo.config.ts",
+    "record-retina": "node record-retina.js"
   },
   "dependencies": {
     "react": "^19.2.7",

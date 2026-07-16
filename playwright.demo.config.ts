@@ -13,13 +13,18 @@ export default defineConfig({
     baseURL: "http://localhost:5173",
     /* 🎥 비디오 녹화 옵션 활성화 */
     video: "on",
-    /* 🖥️ 고화질 녹화를 위해 Full HD (1920x1080) 해상도로 설정 */
-    viewport: { width: 1920, height: 1080 },
-    /* 🍏 레티나(Retina) 디스플레이급 선명한 글자 표현을 위한 2배 스케일 지정 */
-    deviceScaleFactor: 2,
+    /* 🖥️ 픽셀 깨짐과 흐릿함을 물리적으로 극복하기 위해 UHD 4K (3840x2160) 해상도로 설정 */
+    viewport: { width: 3840, height: 2160 },
+    /* 🍏 레티나를 능가하는 극도의 선명한 텍스트 렌더링을 위해 3배 스케일(High-DPI) 지정 */
+    deviceScaleFactor: 3,
     /* ⏳ 조작 간격 기본 딜레이 (부드러운 마우스 무브먼트와 병행하기 위해 500ms로 조율) */
     launchOptions: {
       slowMo: 500,
+      args: [
+        "--force-device-scale-factor=3", // Chromium 렌더러에 고밀도 스케일 강제
+        "--font-render-hinting=full", // 텍스트 외곽선을 가장 또렷하게 힌팅 설정
+        "--enable-font-antialiasing", // 폰트 안티앨리어싱 활성화
+      ],
     },
   },
   projects: [
