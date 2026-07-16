@@ -31,12 +31,5 @@
   },
   "overrides": {
     "vite": "npm:@voidzero-dev/vite-plus-core@0.2.4"
-  },
-  "devEngines": {
-    "packageManager": {
-      "name": "npm",
-      "version": "^11.13.0",
-      "onFail": "download"
-    }
   }
 }
