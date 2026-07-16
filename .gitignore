@@ -33,3 +33,4 @@ playwright/.cache
 *.njsproj
 *.sln
 *.sw?
+.vercel
