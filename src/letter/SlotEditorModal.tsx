@@ -6,16 +6,14 @@ interface SlotEditorModalProps {
   pack: SituationPack;
   slotKey: string;
   currentValue: string;
-  apiKey: string;
   onSave: (value: string) => void;
   onClose: () => void;
 }
 
-// 거친 자유 입력 → 격식 있는 법조체로 다듬기 (Gemini). 실패/무키 시 입력 그대로 둔다(무근거 폴백 금지).
-async function polishWithGemini(raw: string, label: string, apiKey: string): Promise<string> {
+// 거친 자유 입력 → 격식 있는 법조체로 다듬기 (Gemini). 실패 시 입력 그대로 둔다(무근거 폴백 금지).
+async function polishWithGemini(raw: string, label: string): Promise<string> {
   const prompt = `다음 거친 입력을 내용증명의 "${label}" 항목에 들어갈 간결하고 정중한 격식체 한 문장으로 다듬어라. 사실을 지어내지 말고, 따옴표 없이 결과 문장만 출력. 입력: "${raw}"`;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`;
-  const res = await fetch(url, {
+  const res = await fetch("/api/gemini", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
@@ -30,7 +28,6 @@ export function SlotEditorModal({
   pack,
   slotKey,
   currentValue,
-  apiKey,
   onSave,
   onClose,
 }: SlotEditorModalProps) {
@@ -40,10 +37,10 @@ export function SlotEditorModal({
   const [isPolishing, setIsPolishing] = useState(false);
 
   const handlePolish = async () => {
-    if (!draft.trim() || !apiKey.trim()) return;
+    if (!draft.trim()) return;
     setIsPolishing(true);
     try {
-      setDraft(await polishWithGemini(draft, slot.label, apiKey));
+      setDraft(await polishWithGemini(draft, slot.label));
     } catch (err) {
       console.error("법조체 정제 실패:", err);
     } finally {
@@ -95,16 +92,14 @@ export function SlotEditorModal({
                 if (e.key === "Enter" && draft.trim()) onSave(draft);
               }}
             />
-            {apiKey.trim() && (
-              <button
-                className="btn-rewrite-ai"
-                onClick={handlePolish}
-                disabled={isPolishing || !draft.trim()}
-                title="Gemini가 거친 입력을 격식체로 다듬어 줍니다"
-              >
-                {isPolishing ? "⚙️ 정제 중…" : "✨ 법조체로"}
-              </button>
-            )}
+            <button
+              className="btn-rewrite-ai"
+              onClick={handlePolish}
+              disabled={isPolishing || !draft.trim()}
+              title="Gemini가 거친 입력을 격식체로 다듬어 줍니다"
+            >
+              {isPolishing ? "⚙️ 정제 중…" : "✨ 법조체로"}
+            </button>
           </div>
           <div className="slot-actions">
             <button className="btn-secondary" onClick={() => setIsCustom(false)}>

@@ -15,8 +15,8 @@ import "./App.css";
 
 type Step = "home" | "story" | "loading" | "editor" | "exporter";
 
-// Gemini 키는 .env(VITE_GEMINI_API_KEY)에서 로드. 없으면 로컬 휴리스틱 시뮬레이터로 자동 폴백.
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+// Gemini는 서버 프록시(/api/gemini)를 통해 호출한다. 서버에 키가 없거나 호출 실패 시
+// 아래 추출 로직이 로컬 휴리스틱 시뮬레이터로 자동 폴백한다.
 
 const LOADING_CUES = [
   { text: "사연 분석 중…", sub: "날짜·인물·금액 등 핵심 정보를 구조화하는 중입니다." },
@@ -43,9 +43,7 @@ function App() {
       setLoadingCue(0);
       let extracted: Record<string, string> = {};
       try {
-        extracted = apiKey.trim()
-          ? await extractEntitiesWithGemini(userStory, pack, apiKey.trim())
-          : simulateAIExtraction(userStory, pack);
+        extracted = await extractEntitiesWithGemini(userStory, pack);
       } catch (err) {
         console.error("Gemini 추출 실패 → 시뮬레이터 폴백:", err);
         extracted = simulateAIExtraction(userStory, pack);
@@ -139,7 +137,6 @@ function App() {
           <Funnel.Step name="editor">
             <EditorStep
               draft={draft}
-              apiKey={apiKey}
               onSlotClick={setActiveSlotKey}
               onLawClick={setActiveLawId}
               onProceed={() => setStep("exporter")}
@@ -161,7 +158,6 @@ function App() {
           pack={pack}
           slotKey={activeSlotKey}
           currentValue={draft.slots[activeSlotKey] ?? ""}
-          apiKey={apiKey}
           onSave={(value) => {
             draft.setSlot(activeSlotKey, value);
             setActiveSlotKey(null);
